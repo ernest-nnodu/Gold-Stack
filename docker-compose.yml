@@ -1,0 +1,23 @@
+
+services:
+  app:
+    build: .
+    container_name: gold_stack_api
+    ports:
+      - "8000:8000"
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/gold_stack
+      DB_USERNAME: postgres
+      DB_PASSWORD: password
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:18-alpine
+    container_name: gold_stack_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: gold_stack
+    ports:
+      - "5432:5432"
