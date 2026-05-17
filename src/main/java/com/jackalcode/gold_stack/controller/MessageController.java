@@ -17,4 +17,11 @@ public class MessageController {
     MessageEntity message = new MessageEntity("Hello From Gold Stack in AWS!");
         return ResponseEntity.ok(message);
     }
+
+    @GetMapping("/error")
+    public ResponseEntity<MessageEntity> getErrorMessage() {
+
+        var message = new MessageEntity("This is an error message from Gold Stack in AWS!");
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(message);
+    }
 }
