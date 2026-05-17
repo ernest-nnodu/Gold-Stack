@@ -41,4 +41,17 @@ public class MessageControllerUnitTest {
                 () -> assertEquals("This is an error message from Gold Stack in AWS!", response.getBody().getMessage())
         );
     }
+
+    @Test
+    @DisplayName("getCustomMessage should return custom message and status 404")
+    public void getCustomMessage_returnsCustomMessageAndStatus404() {
+
+        var response = messageController.getCustomMessage();
+
+        assertAll(
+                () -> assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode()),
+                () -> assertNotNull(response.getBody()),
+                () -> assertEquals("Message not found in Gold Stack in AWS!", response.getBody().getMessage())
+        );
+    }
 }
