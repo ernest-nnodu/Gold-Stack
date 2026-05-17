@@ -28,4 +28,17 @@ public class MessageControllerUnitTest {
                 () -> assertEquals("Hello From Gold Stack in AWS!", response.getBody().getMessage())
         );
     }
+
+    @Test
+    @DisplayName("getErrorMessage should return error message and status 502")
+    public void getErrorMessage_returnsErrorMessageAndStatus502() {
+
+        var response = messageController.getErrorMessage();
+
+        assertAll(
+                () -> assertEquals(HttpStatus.BAD_GATEWAY, response.getStatusCode()),
+                () -> assertNotNull(response.getBody()),
+                () -> assertEquals("This is an error message from Gold Stack in AWS!", response.getBody().getMessage())
+        );
+    }
 }
