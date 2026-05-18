@@ -1,0 +1,9 @@
+server:
+    port: 8080
+spring:
+    application:
+        name: gold_stack
+    jpa:
+        hibernate:
+            ddl-auto: validate
+        show-sql: true
