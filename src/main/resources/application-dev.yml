@@ -1,0 +1,5 @@
+spring:
+    datasource:
+        password: password
+        url: jdbc:postgresql://localhost:5434/gold_stack
+        username: postgres
