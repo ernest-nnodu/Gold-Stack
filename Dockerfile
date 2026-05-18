@@ -1,6 +1,6 @@
-FROM maven:3.9.4-eclipse-temurin-21 AS build
 
 #Build stage: Compile the application and package it into a JAR file
+FROM maven:3.9.4-eclipse-temurin-21 AS build
 RUN addgroup --system app && adduser --system --group app
 USER app
 WORKDIR /app
