@@ -20,8 +20,8 @@ public class Message {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "description")
-    private String description;
+    @Column(name = "title")
+    private String title;
 
     @Column(name = "content")
     private String content;
@@ -39,13 +39,13 @@ public class Message {
         if (o == null || getClass() != o.getClass()) return false;
         Message message = (Message) o;
         return Objects.equals(id, message.id) &&
-                Objects.equals(description, message.description) &&
+                Objects.equals(title, message.title) &&
                 Objects.equals(content, message.content) &&
                 Objects.equals(createdAt, message.createdAt);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, description, content, createdAt);
+        return Objects.hash(id, title, content, createdAt);
     }
 }

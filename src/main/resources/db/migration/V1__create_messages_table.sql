@@ -1,7 +1,7 @@
 
 CREATE TABLE messages (
     id BIGSERIAL PRIMARY KEY,
-    description VARCHAR(100) NOT NULL,
+    title VARCHAR(100) NOT NULL,
     content TEXT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
