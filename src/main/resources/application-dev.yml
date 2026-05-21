@@ -3,3 +3,8 @@ spring:
         password: password
         url: jdbc:postgresql://localhost:5434/gold_stack
         username: postgres
+    jpa:
+        hibernate:
+            ddl-auto: validate
+    flyway:
+      enabled: true
