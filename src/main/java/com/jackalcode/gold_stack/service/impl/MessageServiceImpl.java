@@ -18,7 +18,7 @@ public class MessageServiceImpl implements MessageService {
     private final MessageRepository messageRepository;
 
     @Override
-    public List<MessageResponse> getAllMessages() {
+    public List<MessageResponse> getMessages() {
 
         List<Message> messages = messageRepository.findAll();
 

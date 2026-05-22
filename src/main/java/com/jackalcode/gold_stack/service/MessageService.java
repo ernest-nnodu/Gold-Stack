@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface MessageService {
 
-    List<MessageResponse> getAllMessages();
+    List<MessageResponse> getMessages();
 
     MessageResponse getMessage(Long id);
 
