@@ -5,7 +5,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class MessageControllerUnitTest {
 
@@ -22,11 +22,9 @@ public class MessageControllerUnitTest {
 
         var response = messageController.getHappyMessage();
 
-        assertAll(
-                () -> assertEquals(HttpStatus.OK, response.getStatusCode()),
-                () -> assertNotNull(response.getBody()),
-                () -> assertEquals("Hello From Gold Stack in AWS!", response.getBody().getMessage())
-        );
+        assertThat(response).isNotNull();
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().content()).isEqualTo("Hello From Gold Stack in AWS!");
     }
 
     @Test
@@ -35,11 +33,9 @@ public class MessageControllerUnitTest {
 
         var response = messageController.getErrorMessage();
 
-        assertAll(
-                () -> assertEquals(HttpStatus.BAD_GATEWAY, response.getStatusCode()),
-                () -> assertNotNull(response.getBody()),
-                () -> assertEquals("This is an error message from Gold Stack in AWS!", response.getBody().getMessage())
-        );
+        assertThat(response).isNotNull();
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_GATEWAY);
+        assertThat(response.getBody().content()).isEqualTo("This is an error message from Gold Stack in AWS!");
     }
 
     @Test
@@ -48,10 +44,8 @@ public class MessageControllerUnitTest {
 
         var response = messageController.getCustomMessage();
 
-        assertAll(
-                () -> assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode()),
-                () -> assertNotNull(response.getBody()),
-                () -> assertEquals("Message not found in Gold Stack in AWS!", response.getBody().getMessage())
-        );
+        assertThat(response).isNotNull();
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody().content()).isEqualTo("Message not found in Gold Stack in AWS!");
     }
 }
