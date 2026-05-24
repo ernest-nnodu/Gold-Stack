@@ -6,9 +6,7 @@ import com.jackalcode.gold_stack.service.MessageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
 import java.util.List;
@@ -26,13 +24,14 @@ public class MessageController {
     }
 
     @GetMapping(path = "/messages/{id}")
-    public ResponseEntity<MessageResponse> getMessage(Long id) {
+    public ResponseEntity<MessageResponse> getMessage(@PathVariable Long id) {
 
         return ResponseEntity.ok(messageService.getMessage(id));
     }
 
     @PostMapping(path = "/messages")
-    public ResponseEntity<MessageResponse> createMessage(CreateMessageRequest messageRequest) {
+    public ResponseEntity<MessageResponse> createMessage(
+            @RequestBody CreateMessageRequest messageRequest) {
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(messageService.createMessage(messageRequest));
