@@ -1,5 +1,3 @@
-server:
-    port: 8080
 spring:
     application:
         name: gold_stack
@@ -7,3 +5,11 @@ spring:
         hibernate:
             ddl-auto: validate
         show-sql: true
+
+management:
+    endpoints:
+        web:
+            exposure:
+                include: health,metrics
+server:
+    port: 8080
