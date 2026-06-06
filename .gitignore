@@ -6,6 +6,7 @@ target/
 .env
 .env.*
 prometheus.yml
+prometheus.dev.yml
 
 ### STS ###
 .apt_generated
