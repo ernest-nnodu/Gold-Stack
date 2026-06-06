@@ -5,8 +5,7 @@ target/
 !**/src/test/**/target/
 .env
 .env.*
-prometheus.yml
-prometheus.dev.yml
+prometheus.prod.yml
 
 ### STS ###
 .apt_generated
