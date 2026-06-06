@@ -43,7 +43,7 @@ public class MessageController {
     MessageResponse message = new MessageResponse(
             0L,
             "Happy Message",
-            "Hello From Gold Stack in AWS!",
+            "Hello From Gold Stack in AWS!!!",
             Instant.now().toString());
         return ResponseEntity.ok(message);
     }

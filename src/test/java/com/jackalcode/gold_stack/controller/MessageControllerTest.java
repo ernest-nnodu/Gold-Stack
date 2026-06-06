@@ -47,7 +47,7 @@ public class MessageControllerTest {
     public void getHappyMessage_returnsHappyMessageAndStatus200() throws Exception {
 
         String expectedTitle = "Happy Message";
-        String expectedContent = "Hello From Gold Stack in AWS!";
+        String expectedContent = "Hello From Gold Stack in AWS!!!";
 
         mockMvc.perform(get("/")
                         .contentType("application/json"))
