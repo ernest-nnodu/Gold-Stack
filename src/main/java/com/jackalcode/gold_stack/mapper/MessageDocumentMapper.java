@@ -4,7 +4,9 @@ import com.jackalcode.gold_stack.entity.Message;
 import org.springframework.ai.document.Document;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.UUID;
 
 @Component
 public class MessageDocumentMapper {
@@ -17,9 +19,16 @@ public class MessageDocumentMapper {
                 """.formatted(message.getTitle(), message.getContent());
 
         return new Document(
-                "message-" + message.getId(),
+                generateDocumentId(message.getId()),
                 content,
                 Map.of("messageId", message.getId().toString(),
                         "title", message.getTitle()));
+    }
+
+    private String generateDocumentId(Long messageId) {
+
+        return UUID.nameUUIDFromBytes(
+                ("message-" + messageId).getBytes(StandardCharsets.UTF_8)
+        ).toString();
     }
 }
