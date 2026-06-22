@@ -19,16 +19,15 @@ public class MessageDocumentMapper {
                 """.formatted(message.getTitle(), message.getContent());
 
         return new Document(
-                generateDocumentId(message.getId()),
+                toDocumentId(message.getId()),
                 content,
                 Map.of("messageId", message.getId().toString(),
                         "title", message.getTitle()));
     }
 
-    private String generateDocumentId(Long messageId) {
+    public String toDocumentId(Long messageId) {
 
         return UUID.nameUUIDFromBytes(
-                ("message-" + messageId).getBytes(StandardCharsets.UTF_8)
-        ).toString();
+                ("message-" + messageId).getBytes(StandardCharsets.UTF_8)).toString();
     }
 }

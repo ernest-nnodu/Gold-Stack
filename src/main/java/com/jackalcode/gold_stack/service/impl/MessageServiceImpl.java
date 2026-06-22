@@ -30,10 +30,10 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public MessageResponse getMessage(Long id) {
+    public MessageResponse getMessage(Long messageId) {
 
-        Message retrievedMessage = messageRepository.findById(id)
-                .orElseThrow(() -> new MessageNotFoundException(id));
+        Message retrievedMessage = messageRepository.findById(messageId)
+                .orElseThrow(() -> new MessageNotFoundException(messageId));
 
         return mapToMessageResponse(retrievedMessage);
     }
@@ -50,6 +50,24 @@ public class MessageServiceImpl implements MessageService {
 
         return mapToMessageResponse(persistedMessage);
     }
+
+    @Override
+    @Transactional
+    public MessageResponse updateMessage(Long messageId, CreateMessageRequest messageRequest) {
+
+        Message existingMessage = messageRepository.findById(messageId)
+                .orElseThrow(() -> new MessageNotFoundException(messageId));
+
+        existingMessage.setTitle(messageRequest.title());
+        existingMessage.setContent(messageRequest.content());
+
+        var updatedMessage = messageRepository.save(existingMessage);
+
+        messageIngestionService.reIngest(updatedMessage);
+
+        return mapToMessageResponse(updatedMessage);
+    }
+
 
     private Message mapToMessage(CreateMessageRequest messageRequest) {
 
