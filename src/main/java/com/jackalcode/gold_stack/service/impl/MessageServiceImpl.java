@@ -8,6 +8,7 @@ import com.jackalcode.gold_stack.repository.MessageRepository;
 import com.jackalcode.gold_stack.service.MessageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -16,6 +17,7 @@ import java.util.List;
 public class MessageServiceImpl implements MessageService {
 
     private final MessageRepository messageRepository;
+    private final MessageIngestionService messageIngestionService;
 
     @Override
     public List<MessageResponse> getMessages() {
@@ -37,11 +39,14 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
+    @Transactional
     public MessageResponse createMessage(CreateMessageRequest messageRequest) {
 
         Message messageToPersist = mapToMessage(messageRequest);
 
         var persistedMessage = messageRepository.save(messageToPersist);
+
+        messageIngestionService.ingest(persistedMessage);
 
         return mapToMessageResponse(persistedMessage);
     }
