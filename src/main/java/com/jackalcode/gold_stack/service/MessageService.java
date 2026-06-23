@@ -14,4 +14,6 @@ public interface MessageService {
     MessageResponse createMessage(CreateMessageRequest messageRequest);
 
     MessageResponse updateMessage(Long id, CreateMessageRequest messageRequest);
+
+    void deleteMessage(Long id);
 }

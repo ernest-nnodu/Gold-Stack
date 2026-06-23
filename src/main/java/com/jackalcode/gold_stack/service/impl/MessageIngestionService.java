@@ -29,10 +29,19 @@ public class MessageIngestionService implements IngestionService<Message> {
     public void reIngest(Message message) {
 
         //Delete existing document in vector database using its document ID, then add the updated document
-        var documentId = messageDocumentMapper.toDocumentId(message.getId());
-        vectorStore.delete(List.of(documentId));
-
+        deleteDocument(message.getId());
         var document =  messageDocumentMapper.toDocument(message);
         vectorStore.add(List.of(document));
+    }
+
+    @Override
+    public void delete(Long id) {
+
+        deleteDocument(id);
+    }
+
+    private void deleteDocument(Long messageId) {
+        var documentId = messageDocumentMapper.toDocumentId(messageId);
+        vectorStore.delete(List.of(documentId));
     }
 }

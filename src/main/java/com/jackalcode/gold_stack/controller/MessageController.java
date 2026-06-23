@@ -44,6 +44,14 @@ public class MessageController {
         return ResponseEntity.ok(messageService.updateMessage(messageId, messageRequest));
     }
 
+    @DeleteMapping(path = "/messages/{id}")
+    public ResponseEntity<Void> deleteMessage(
+            @PathVariable(name = "id") Long messageId) {
+
+        messageService.deleteMessage(messageId);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping
     public ResponseEntity<MessageResponse> getHappyMessage() {
 

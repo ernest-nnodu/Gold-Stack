@@ -32,8 +32,7 @@ public class MessageServiceImpl implements MessageService {
     @Override
     public MessageResponse getMessage(Long messageId) {
 
-        Message retrievedMessage = messageRepository.findById(messageId)
-                .orElseThrow(() -> new MessageNotFoundException(messageId));
+        Message retrievedMessage = getMessageEntity(messageId);
 
         return mapToMessageResponse(retrievedMessage);
     }
@@ -55,8 +54,7 @@ public class MessageServiceImpl implements MessageService {
     @Transactional
     public MessageResponse updateMessage(Long messageId, CreateMessageRequest messageRequest) {
 
-        Message existingMessage = messageRepository.findById(messageId)
-                .orElseThrow(() -> new MessageNotFoundException(messageId));
+        Message existingMessage = getMessageEntity(messageId);
 
         existingMessage.setTitle(messageRequest.title());
         existingMessage.setContent(messageRequest.content());
@@ -68,6 +66,19 @@ public class MessageServiceImpl implements MessageService {
         return mapToMessageResponse(updatedMessage);
     }
 
+    @Override
+    @Transactional
+    public void deleteMessage(Long messageId) {
+
+        Message message = getMessageEntity(messageId);
+        messageRepository.delete(message);
+        messageIngestionService.delete(messageId);
+    }
+
+    private Message getMessageEntity(Long messageId) {
+        return messageRepository.findById(messageId)
+                .orElseThrow(() -> new MessageNotFoundException(messageId));
+    }
 
     private Message mapToMessage(CreateMessageRequest messageRequest) {
 
