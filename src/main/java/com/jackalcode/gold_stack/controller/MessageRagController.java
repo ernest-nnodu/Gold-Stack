@@ -1,7 +1,7 @@
 package com.jackalcode.gold_stack.controller;
 
-import com.jackalcode.gold_stack.dto.AnswerResponse;
 import com.jackalcode.gold_stack.dto.QuestionRequest;
+import com.jackalcode.gold_stack.dto.RagAnswer;
 import com.jackalcode.gold_stack.service.impl.MessageRagService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,10 +16,10 @@ public class MessageRagController {
     private final MessageRagService messageRagService;
 
     @PostMapping(path = "messages/ask")
-    public ResponseEntity<AnswerResponse> askQuestion(
+    public ResponseEntity<RagAnswer> askQuestion(
             @RequestBody QuestionRequest request) {
 
         var response = messageRagService.ask(request.question());
-        return ResponseEntity.ok(new AnswerResponse(response));
+        return ResponseEntity.ok(response);
     }
 }
