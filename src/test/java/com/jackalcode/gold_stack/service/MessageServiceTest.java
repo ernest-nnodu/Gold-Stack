@@ -117,6 +117,30 @@ public class MessageServiceTest {
         verify(messageIngestionService).ingest(persistedMessage);
     }
 
+    @Test
+    @DisplayName("updateMessage should update message in db and reingest updated message in vector db when message exists")
+    void updateMessage_whenMessageExists_returnsUpdatedMessage() {
+
+        var existingMessage = createMessage(1L, "Title 1", "Content 1");
+        var updatedMessage = createMessage(1L, "Updated Title", "Updated Content");
+
+        when(messageRepository.findById(1L)).thenReturn(Optional.of(existingMessage));
+        when(messageRepository.save(existingMessage)).thenReturn(updatedMessage);
+
+        var result = messageService.updateMessage(1L,
+                new CreateMessageRequest("Updated Title", "Updated Content"));
+
+        assertThat(result)
+                .isNotNull()
+                .extracting("id", "title", "content")
+                .containsExactly(1L, "Updated Title", "Updated Content");
+
+        verify(messageRepository).findById(1L);
+        verify(messageRepository).save(existingMessage);
+        verify(messageIngestionService).reIngest(updatedMessage);
+
+    }
+
     private Message createMessage(Long id, String title, String content) {
 
         return Message.builder()
