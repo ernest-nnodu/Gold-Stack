@@ -141,6 +141,21 @@ public class MessageServiceTest {
 
     }
 
+    @Test
+    @DisplayName("deleteMessage should delete message in db and delete message in vector db when message exists")
+    void deleteMessage_whenMessageExists_returnsDeletedMessage() {
+
+        var existingMessage = createMessage(1L, "Title 1", "Content 1");
+        when(messageRepository.findById(1L)).thenReturn(Optional.of(existingMessage));
+
+        messageService.deleteMessage(1L);
+
+        verify(messageRepository).findById(1L);
+        verify(messageRepository).delete(existingMessage);
+        verify(messageIngestionService).delete(1L);
+
+    }
+
     private Message createMessage(Long id, String title, String content) {
 
         return Message.builder()
