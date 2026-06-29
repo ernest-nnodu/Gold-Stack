@@ -4,6 +4,7 @@ import com.jackalcode.gold_stack.dto.CreateMessageRequest;
 import com.jackalcode.gold_stack.entity.Message;
 import com.jackalcode.gold_stack.exception.MessageNotFoundException;
 import com.jackalcode.gold_stack.repository.MessageRepository;
+import com.jackalcode.gold_stack.service.impl.MessageIngestionService;
 import com.jackalcode.gold_stack.service.impl.MessageServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,6 +29,9 @@ public class MessageServiceTest {
 
     @Mock
     private MessageRepository messageRepository;
+
+    @Mock
+    private MessageIngestionService messageIngestionService;
 
     @InjectMocks
     private MessageServiceImpl messageService;
@@ -94,7 +98,7 @@ public class MessageServiceTest {
     }
 
     @Test
-    @DisplayName("createMessage should return created message when message request is valid")
+    @DisplayName("createMessage should persist message in database, ingest to vector db and return created message")
     void createMessage_whenMessageRequestIsValid_returnsCreatedMessage() {
 
         var persistedMessage = createMessage(1L, "Title 1", "Content 1");
@@ -110,6 +114,7 @@ public class MessageServiceTest {
                 .containsExactly(1L, "Title 1", "Content 1");
 
         verify(messageRepository).save(any(Message.class));
+        verify(messageIngestionService).ingest(persistedMessage);
     }
 
     private Message createMessage(Long id, String title, String content) {
