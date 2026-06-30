@@ -92,4 +92,18 @@ public class MessageIngestionServiceTest {
                 .containsEntry("title", "Updated Title");
 
     }
+
+    @Test
+    @DisplayName("delete should delete message embeddings from vector store")
+    public void delete_withMessageId_deletesMessageEmbeddingsFromVectorStore() {
+
+        Long messageId = 1L;
+
+        messageIngestionService.delete(messageId);
+
+        var expectedId = UUID.nameUUIDFromBytes(
+                ("message-" + messageId).getBytes(StandardCharsets.UTF_8)).toString();
+
+        verify(vectorStore).delete(List.of(expectedId));
+    }
 }
