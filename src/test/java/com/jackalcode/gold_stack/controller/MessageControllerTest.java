@@ -111,7 +111,7 @@ public class MessageControllerTest {
 
     @Test
     @DisplayName("getMessage should return message and status 200")
-    public void getMessage_returnsMessageAndStatus200() throws Exception {
+    public void getMessage_whenMessageExists_returnsMessageAndStatus200() throws Exception {
 
         var expectedTitle = "Title 1";
         var expectedContent = "Content 1";
@@ -125,6 +125,17 @@ public class MessageControllerTest {
                 .andExpect(jsonPath("$.id").value(savedMessageId))
                 .andExpect(jsonPath("$.title").value(expectedTitle))
                 .andExpect(jsonPath("$.content").value(expectedContent));
+    }
+
+    @Test
+    @DisplayName("getMessage when message does not exist should return status 404")
+    public void getMessage_whenMessageDoesNotExist_returnsStatus404() throws Exception {
+
+        var nonExistentMessageId = 999L;
+
+        mockMvc.perform(get("/messages/{id}", nonExistentMessageId)
+                        .contentType("application/json"))
+                .andExpect(status().isNotFound());
     }
 
     @Test
