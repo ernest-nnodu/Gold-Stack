@@ -4,12 +4,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jackalcode.gold_stack.dto.CreateMessageRequest;
 import com.jackalcode.gold_stack.entity.Message;
 import com.jackalcode.gold_stack.repository.MessageRepository;
+import com.jackalcode.gold_stack.service.impl.MessageIngestionService;
+import com.jackalcode.gold_stack.util.MessageDataSeeder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -18,8 +21,7 @@ import org.testcontainers.junit.jupiter.Container;
 import java.time.Instant;
 import java.util.List;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -37,10 +39,16 @@ public class MessageControllerTest {
     @Autowired
     private MessageRepository messageRepository;
 
+    @MockitoBean
+    private MessageIngestionService messageIngestionService;
+
+    @MockitoBean
+    private MessageDataSeeder messageDataSeeder;
+
     @Container
     @ServiceConnection
     static PostgreSQLContainer<?> postgresContainer =
-            new PostgreSQLContainer<>("postgres:17-alpine");
+            new PostgreSQLContainer<>("pgvector/pgvector:pg16");
 
     @Test
     @DisplayName("getHappyMessage should return happy message and status 200")
@@ -132,6 +140,26 @@ public class MessageControllerTest {
                         .content(objectMapper.writeValueAsString(messageRequest)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.title").value(expectedTitle))
+                .andExpect(jsonPath("$.content").value(expectedContent));
+    }
+
+    @Test
+    @DisplayName("updateMessage should return updated message and status 200")
+    public void updateMessage_whenMessageExists_shouldReturnUpdatedMessageAndStatus200() throws Exception {
+
+        var persistedMessage = messageRepository.saveAndFlush(createMessage("Title 1", "Content 1"));
+        var persistedMessageId = persistedMessage.getId();
+
+        var updateMessageRequest = createMessage("Updated Title", "Updated Content");
+        var expectedTitle = "Updated Title";
+        var expectedContent = "Updated Content";
+
+        mockMvc.perform(put("/messages/{id}", persistedMessageId)
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(updateMessageRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(persistedMessageId))
                 .andExpect(jsonPath("$.title").value(expectedTitle))
                 .andExpect(jsonPath("$.content").value(expectedContent));
     }
