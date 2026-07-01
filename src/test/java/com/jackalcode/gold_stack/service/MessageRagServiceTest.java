@@ -2,6 +2,7 @@ package com.jackalcode.gold_stack.service;
 
 import com.jackalcode.gold_stack.dto.RagAnswer;
 import com.jackalcode.gold_stack.service.impl.MessageRagService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,6 +42,13 @@ public class MessageRagServiceTest {
     @InjectMocks
     private MessageRagService messageRagService;
 
+    @BeforeEach
+    void setUp() {
+        when(chatClient.prompt()).thenReturn(chatClientRequestSpec);
+        when(chatClientRequestSpec.user(anyString())).thenReturn(chatClientRequestSpec);
+        when(chatClientRequestSpec.call()).thenReturn(callResponseSpec);
+    }
+
     @Test
     @DisplayName("ask method should return an answer and sources for a given question")
     public void ask_withQuestion_returnsAnswerAndSources() {
@@ -63,10 +71,6 @@ public class MessageRagServiceTest {
 
         when(vectorStore.similaritySearch(any(SearchRequest.class)))
                 .thenReturn(List.of(doc));
-
-        when(chatClient.prompt()).thenReturn(chatClientRequestSpec);
-        when(chatClientRequestSpec.user(anyString())).thenReturn(chatClientRequestSpec);
-        when(chatClientRequestSpec.call()).thenReturn(callResponseSpec);
         when(callResponseSpec.content())
                 .thenReturn("Docker is a platform that uses containers to run applications.");
 
@@ -79,5 +83,21 @@ public class MessageRagServiceTest {
                 .isEqualTo(doc.getMetadata().get("messageId"));
         assertThat(response.sources().getFirst().title())
                 .isEqualTo(doc.getMetadata().get("title"));
+    }
+
+    @Test
+    @DisplayName("ask method should return default message when no relevant context exists")
+    public void ask_whenNoRelevantContextExists_returnsDefaultMessage() {
+
+        String expectedResponse = "I could not find this information in the message database.";
+        when(vectorStore.similaritySearch(any(SearchRequest.class)))
+                .thenReturn(List.of());
+        when(callResponseSpec.content())
+                .thenReturn(expectedResponse);
+
+        RagAnswer response = messageRagService.ask("What is current company policy?");
+
+        assertThat(response.answer()).isEqualTo(expectedResponse);
+        assertThat(response.sources()).isEmpty();
     }
 }
