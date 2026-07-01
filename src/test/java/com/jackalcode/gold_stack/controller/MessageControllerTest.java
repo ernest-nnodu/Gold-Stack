@@ -176,6 +176,19 @@ public class MessageControllerTest {
     }
 
     @Test
+    @DisplayName("updateMessage should return status 404 when message does not exist")
+    public void updateMessage_whenMessageDoesNotExist_returnsStatus404() throws Exception {
+
+        var nonExistentMessageId = 999L;
+
+        mockMvc.perform(put("/messages/{id}", nonExistentMessageId)
+                .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(
+                                createMessage("Updated Title", "Updated Content"))))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     @DisplayName("deleteMessage should return status 204 when message exists")
     public void deleteMessage_whenMessageExists_returnsStatus204() throws Exception {
 
