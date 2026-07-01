@@ -164,6 +164,18 @@ public class MessageControllerTest {
                 .andExpect(jsonPath("$.content").value(expectedContent));
     }
 
+    @Test
+    @DisplayName("deleteMessage should return status 204 when message exists")
+    public void deleteMessage_whenMessageExists_returnsStatus204() throws Exception {
+
+        var persistedMessage = messageRepository.saveAndFlush(createMessage("Title 1", "Content 1"));
+        var persistedMessageId = persistedMessage.getId();
+
+        mockMvc.perform(delete("/messages/{id}", persistedMessageId)
+                        .contentType("application/json"))
+                .andExpect(status().isNoContent());
+    }
+
     private Message createMessage(String title, String content) {
 
         Message message = new Message();
