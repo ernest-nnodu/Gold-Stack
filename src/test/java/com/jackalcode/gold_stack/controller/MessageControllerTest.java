@@ -201,6 +201,7 @@ public class MessageControllerTest {
     }
 
     @Test
+    @DisplayName("updateMessage should return status 400 when request is invalid")
     public void updateMessage_whenRequestIsInvalid_returnsStatus400() throws Exception {
 
         var persistedMessage = messageRepository.saveAndFlush(createMessage("Title 1", "Content 1"));
