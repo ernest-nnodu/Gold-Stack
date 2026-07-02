@@ -40,7 +40,8 @@ public class MessageController {
 
     @PutMapping(path = "/messages/{id}")
     public ResponseEntity<MessageResponse> updateMessage(
-            @PathVariable(name = "id") Long messageId, @RequestBody CreateMessageRequest messageRequest) {
+            @PathVariable(name = "id") Long messageId,
+            @Valid @RequestBody CreateMessageRequest messageRequest) {
 
         return ResponseEntity.ok(messageService.updateMessage(messageId, messageRequest));
     }

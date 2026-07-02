@@ -201,6 +201,20 @@ public class MessageControllerTest {
     }
 
     @Test
+    public void updateMessage_whenRequestIsInvalid_returnsStatus400() throws Exception {
+
+        var persistedMessage = messageRepository.saveAndFlush(createMessage("Title 1", "Content 1"));
+        var persistedMessageId = persistedMessage.getId();
+
+        var invalidUpdateRequest = new CreateMessageRequest("", "");
+
+        mockMvc.perform(put("/messages/{id}", persistedMessageId)
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(invalidUpdateRequest)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     @DisplayName("deleteMessage should return status 204 when message exists")
     public void deleteMessage_whenMessageExists_returnsStatus204() throws Exception {
 
