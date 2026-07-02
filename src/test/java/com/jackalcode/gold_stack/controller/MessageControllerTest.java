@@ -156,6 +156,18 @@ public class MessageControllerTest {
     }
 
     @Test
+    @DisplayName("createMessage when request is invalid should return status 400")
+    public void createMessage_whenRequestIsInvalid_returnsStatus400() throws Exception {
+
+        var invalidMessageRequest = new CreateMessageRequest("", "");
+
+        mockMvc.perform(post("/messages")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(invalidMessageRequest)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     @DisplayName("updateMessage should return updated message and status 200")
     public void updateMessage_whenMessageExists_shouldReturnUpdatedMessageAndStatus200() throws Exception {
 
