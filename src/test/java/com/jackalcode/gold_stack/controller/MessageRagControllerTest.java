@@ -19,6 +19,7 @@ import org.testcontainers.junit.jupiter.Container;
 
 import java.util.List;
 
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -59,6 +60,8 @@ public class MessageRagControllerTest {
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
+
+        verify(messageRagService).ask(question);
     }
 
     @Test
@@ -84,6 +87,8 @@ public class MessageRagControllerTest {
                 .andExpect(jsonPath("$.sources[0].title").value("Source 1"))
                 .andExpect(jsonPath("$.sources[1].id").value(2L))
                 .andExpect(jsonPath("$.sources[1].title").value("Source 2"));
+
+        verify(messageRagService).ask(question);
     }
 
     @Test
