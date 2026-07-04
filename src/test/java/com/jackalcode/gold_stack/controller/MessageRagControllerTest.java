@@ -6,6 +6,7 @@ import com.jackalcode.gold_stack.dto.RagAnswer;
 import com.jackalcode.gold_stack.dto.RagSource;
 import com.jackalcode.gold_stack.service.impl.MessageRagService;
 import com.jackalcode.gold_stack.util.MessageDataSeeder;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -18,6 +19,7 @@ import org.testcontainers.junit.jupiter.Container;
 
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -45,6 +47,7 @@ public class MessageRagControllerTest {
             new PostgreSQLContainer<>("pgvector/pgvector:pg16");
 
     @Test
+    @DisplayName("Ask question should return 200 status when question is valid")
     public void askQuestion_whenQuestionIsValid_returns200Status() throws Exception {
 
         String question = "What is your name?";
@@ -60,6 +63,7 @@ public class MessageRagControllerTest {
     }
 
     @Test
+    @DisplayName("Ask question should return answer and sources when question is valid")
     public void askQuestion_whenQuestionIsValid_returnsAnswerAndSources() throws Exception {
 
         String question = "What is your name?";
@@ -81,5 +85,18 @@ public class MessageRagControllerTest {
                 .andExpect(jsonPath("$.sources[0].title").value("Source 1"))
                 .andExpect(jsonPath("$.sources[1].id").value(2L))
                 .andExpect(jsonPath("$.sources[1].title").value("Source 2"));
+    }
+
+    @Test
+    @DisplayName("Ask question should return 400 status when question is invalid")
+    public void askQuestion_whenQuestionIsInvalid_returns400Status() throws Exception {
+
+        QuestionRequest request = new QuestionRequest(null);
+        when(messageRagService.ask(anyString())).thenReturn(null);
+
+        mockMvc.perform(post("/messages/ask")
+                .contentType("application/json")
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
     }
 }

@@ -3,6 +3,7 @@ package com.jackalcode.gold_stack.controller;
 import com.jackalcode.gold_stack.dto.QuestionRequest;
 import com.jackalcode.gold_stack.dto.RagAnswer;
 import com.jackalcode.gold_stack.service.impl.MessageRagService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,7 +18,7 @@ public class MessageRagController {
 
     @PostMapping(path = "messages/ask")
     public ResponseEntity<RagAnswer> askQuestion(
-            @RequestBody QuestionRequest request) {
+            @Valid @RequestBody QuestionRequest request) {
 
         var response = messageRagService.ask(request.question());
         return ResponseEntity.ok(response);
