@@ -19,7 +19,6 @@ import org.testcontainers.junit.jupiter.Container;
 
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -92,7 +91,17 @@ public class MessageRagControllerTest {
     public void askQuestion_whenQuestionIsInvalid_returns400Status() throws Exception {
 
         QuestionRequest request = new QuestionRequest(null);
-        when(messageRagService.ask(anyString())).thenReturn(null);
+
+        mockMvc.perform(post("/messages/ask")
+                .contentType("application/json")
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void askQuestion_whenQuestionIsEmpty_returns400Status() throws Exception {
+
+        QuestionRequest request = new QuestionRequest("");
 
         mockMvc.perform(post("/messages/ask")
                 .contentType("application/json")
