@@ -117,6 +117,23 @@ public class MessageServiceTest {
     }
 
     @Test
+    @DisplayName("createMessage should not ingest when repository save fails")
+    void createMessage_whenRepositorySaveFails_doesNotIngest() {
+
+        when(messageRepository.save(any(Message.class)))
+                .thenThrow(new RuntimeException("Database error"));
+
+        assertThrows(RuntimeException.class, () ->
+                messageService.createMessage(
+                        new CreateMessageRequest("Title 1", "Content 1")
+                )
+        );
+
+        verify(messageRepository).save(any(Message.class));
+        verifyNoInteractions(messageIngestionService);
+    }
+
+    @Test
     @DisplayName("updateMessage should update message in db and reingest updated message in vector db when message exists")
     void updateMessage_whenMessageExists_returnsUpdatedMessage() {
 
@@ -167,6 +184,17 @@ public class MessageServiceTest {
         verify(messageRepository).delete(existingMessage);
         verify(messageIngestionService).delete(1L);
 
+    }
+
+    @Test
+    void deleteMessage_whenMessageDoesNotExist_throwsException() {
+
+        when(messageRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(MessageNotFoundException.class, () -> messageService.deleteMessage(1L));
+
+        verify(messageRepository).findById(1L);
+        verifyNoInteractions(messageIngestionService);
     }
 
     private Message createMessage(Long id, String title, String content) {
