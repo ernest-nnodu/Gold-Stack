@@ -172,6 +172,28 @@ public class MessageServiceTest {
     }
 
     @Test
+    @DisplayName("updateMessage should not reingest when repository save fails")
+    void updateMessage_whenRepositorySaveFails_doesNotReingest() {
+
+        var existingMessage = createMessage(1L, "Old Title", "Old Content");
+
+        when(messageRepository.findById(1L)).thenReturn(Optional.of(existingMessage));
+        when(messageRepository.save(existingMessage))
+                .thenThrow(new RuntimeException("Database error"));
+
+        assertThrows(RuntimeException.class, () ->
+                messageService.updateMessage(
+                        1L,
+                        new CreateMessageRequest("Updated Title", "Updated Content")
+                )
+        );
+
+        verify(messageRepository).findById(1L);
+        verify(messageRepository).save(existingMessage);
+        verifyNoInteractions(messageIngestionService);
+    }
+
+    @Test
     @DisplayName("deleteMessage should delete message in db and delete message in vector db when message exists")
     void deleteMessage_whenMessageExists_returnsDeletedMessage() {
 
