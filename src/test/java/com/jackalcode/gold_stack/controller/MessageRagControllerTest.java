@@ -104,6 +104,7 @@ public class MessageRagControllerTest {
     }
 
     @Test
+    @DisplayName("Ask question should return 400 status when question is blank")
     public void askQuestion_whenQuestionIsEmpty_returns400Status() throws Exception {
 
         QuestionRequest request = new QuestionRequest("");

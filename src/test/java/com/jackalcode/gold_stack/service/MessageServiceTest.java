@@ -21,8 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.tuple;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class MessageServiceTest {
@@ -139,6 +138,20 @@ public class MessageServiceTest {
         verify(messageRepository).save(existingMessage);
         verify(messageIngestionService).reIngest(updatedMessage);
 
+    }
+
+    @Test
+    @DisplayName("updateMessage should throw exception and not ingest when message does not exist")
+    void updateMessage_whenMessageDoesNotExist_throwsExceptionAndDoesNotIngest() {
+
+        when(messageRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(MessageNotFoundException.class,
+                () -> messageService.updateMessage(
+                        1L, new CreateMessageRequest("Updated Title", "Updated Content")));
+
+        verify(messageRepository).findById(1L);
+        verifyNoMoreInteractions(messageIngestionService);
     }
 
     @Test
