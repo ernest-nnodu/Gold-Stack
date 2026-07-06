@@ -5,10 +5,15 @@ import com.jackalcode.gold_stack.repository.MessageRepository;
 import com.jackalcode.gold_stack.service.MessageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
+@ConditionalOnProperty(
+        name = "app.seed.enabled",
+        havingValue = "true"
+)
 public class MessageDataSeeder implements CommandLineRunner {
 
     private final MessageService messageService;

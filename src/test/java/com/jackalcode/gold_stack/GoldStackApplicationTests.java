@@ -14,7 +14,7 @@ class GoldStackApplicationTests {
     @Container
     @ServiceConnection
     static PostgreSQLContainer<?> postgresContainer =
-            new PostgreSQLContainer<>("postgres:17-alpine");
+            new PostgreSQLContainer<>("pgvector/pgvector:pg16");
 
     @Test
     void contextLoads() {
