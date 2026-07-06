@@ -32,7 +32,7 @@ services:
       - postgres
 
   postgres:
-    image: postgres:17-alpine
+    image: pgvector/pgvector:pg16
     container_name: gold_stack_postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
