@@ -4,6 +4,7 @@ import com.jackalcode.gold_stack.dto.CreateMessageRequest;
 import com.jackalcode.gold_stack.entity.Message;
 import com.jackalcode.gold_stack.exception.MessageNotFoundException;
 import com.jackalcode.gold_stack.repository.MessageRepository;
+import com.jackalcode.gold_stack.service.impl.MessageIngestionService;
 import com.jackalcode.gold_stack.service.impl.MessageServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,14 +21,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.tuple;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class MessageServiceTest {
 
     @Mock
     private MessageRepository messageRepository;
+
+    @Mock
+    private MessageIngestionService messageIngestionService;
 
     @InjectMocks
     private MessageServiceImpl messageService;
@@ -94,7 +97,7 @@ public class MessageServiceTest {
     }
 
     @Test
-    @DisplayName("createMessage should return created message when message request is valid")
+    @DisplayName("createMessage should persist message in database, ingest to vector db and return created message")
     void createMessage_whenMessageRequestIsValid_returnsCreatedMessage() {
 
         var persistedMessage = createMessage(1L, "Title 1", "Content 1");
@@ -110,6 +113,110 @@ public class MessageServiceTest {
                 .containsExactly(1L, "Title 1", "Content 1");
 
         verify(messageRepository).save(any(Message.class));
+        verify(messageIngestionService).ingest(persistedMessage);
+    }
+
+    @Test
+    @DisplayName("createMessage should not ingest when repository save fails")
+    void createMessage_whenRepositorySaveFails_doesNotIngest() {
+
+        when(messageRepository.save(any(Message.class)))
+                .thenThrow(new RuntimeException("Database error"));
+
+        assertThrows(RuntimeException.class, () ->
+                messageService.createMessage(
+                        new CreateMessageRequest("Title 1", "Content 1")
+                )
+        );
+
+        verify(messageRepository).save(any(Message.class));
+        verifyNoInteractions(messageIngestionService);
+    }
+
+    @Test
+    @DisplayName("updateMessage should update message in db and reingest updated message in vector db when message exists")
+    void updateMessage_whenMessageExists_returnsUpdatedMessage() {
+
+        var existingMessage = createMessage(1L, "Title 1", "Content 1");
+        var updatedMessage = createMessage(1L, "Updated Title", "Updated Content");
+
+        when(messageRepository.findById(1L)).thenReturn(Optional.of(existingMessage));
+        when(messageRepository.save(existingMessage)).thenReturn(updatedMessage);
+
+        var result = messageService.updateMessage(1L,
+                new CreateMessageRequest("Updated Title", "Updated Content"));
+
+        assertThat(result)
+                .isNotNull()
+                .extracting("id", "title", "content")
+                .containsExactly(1L, "Updated Title", "Updated Content");
+
+        verify(messageRepository).findById(1L);
+        verify(messageRepository).save(existingMessage);
+        verify(messageIngestionService).reIngest(updatedMessage);
+
+    }
+
+    @Test
+    @DisplayName("updateMessage should throw exception and not ingest when message does not exist")
+    void updateMessage_whenMessageDoesNotExist_throwsExceptionAndDoesNotIngest() {
+
+        when(messageRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(MessageNotFoundException.class,
+                () -> messageService.updateMessage(
+                        1L, new CreateMessageRequest("Updated Title", "Updated Content")));
+
+        verify(messageRepository).findById(1L);
+        verifyNoMoreInteractions(messageIngestionService);
+    }
+
+    @Test
+    @DisplayName("updateMessage should not reingest when repository save fails")
+    void updateMessage_whenRepositorySaveFails_doesNotReingest() {
+
+        var existingMessage = createMessage(1L, "Old Title", "Old Content");
+
+        when(messageRepository.findById(1L)).thenReturn(Optional.of(existingMessage));
+        when(messageRepository.save(existingMessage))
+                .thenThrow(new RuntimeException("Database error"));
+
+        assertThrows(RuntimeException.class, () ->
+                messageService.updateMessage(
+                        1L,
+                        new CreateMessageRequest("Updated Title", "Updated Content")
+                )
+        );
+
+        verify(messageRepository).findById(1L);
+        verify(messageRepository).save(existingMessage);
+        verifyNoInteractions(messageIngestionService);
+    }
+
+    @Test
+    @DisplayName("deleteMessage should delete message in db and delete message in vector db when message exists")
+    void deleteMessage_whenMessageExists_returnsDeletedMessage() {
+
+        var existingMessage = createMessage(1L, "Title 1", "Content 1");
+        when(messageRepository.findById(1L)).thenReturn(Optional.of(existingMessage));
+
+        messageService.deleteMessage(1L);
+
+        verify(messageRepository).findById(1L);
+        verify(messageRepository).delete(existingMessage);
+        verify(messageIngestionService).delete(1L);
+
+    }
+
+    @Test
+    void deleteMessage_whenMessageDoesNotExist_throwsException() {
+
+        when(messageRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(MessageNotFoundException.class, () -> messageService.deleteMessage(1L));
+
+        verify(messageRepository).findById(1L);
+        verifyNoInteractions(messageIngestionService);
     }
 
     private Message createMessage(Long id, String title, String content) {

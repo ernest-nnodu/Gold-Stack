@@ -3,6 +3,7 @@ package com.jackalcode.gold_stack.controller;
 import com.jackalcode.gold_stack.dto.CreateMessageRequest;
 import com.jackalcode.gold_stack.dto.MessageResponse;
 import com.jackalcode.gold_stack.service.MessageService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,10 +32,26 @@ public class MessageController {
 
     @PostMapping(path = "/messages")
     public ResponseEntity<MessageResponse> createMessage(
-            @RequestBody CreateMessageRequest messageRequest) {
+            @Valid @RequestBody CreateMessageRequest messageRequest) {
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(messageService.createMessage(messageRequest));
+    }
+
+    @PutMapping(path = "/messages/{id}")
+    public ResponseEntity<MessageResponse> updateMessage(
+            @PathVariable(name = "id") Long messageId,
+            @Valid @RequestBody CreateMessageRequest messageRequest) {
+
+        return ResponseEntity.ok(messageService.updateMessage(messageId, messageRequest));
+    }
+
+    @DeleteMapping(path = "/messages/{id}")
+    public ResponseEntity<Void> deleteMessage(
+            @PathVariable(name = "id") Long messageId) {
+
+        messageService.deleteMessage(messageId);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping

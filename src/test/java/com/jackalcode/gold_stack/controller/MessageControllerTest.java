@@ -4,12 +4,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jackalcode.gold_stack.dto.CreateMessageRequest;
 import com.jackalcode.gold_stack.entity.Message;
 import com.jackalcode.gold_stack.repository.MessageRepository;
+import com.jackalcode.gold_stack.service.impl.MessageIngestionService;
+import com.jackalcode.gold_stack.util.MessageDataSeeder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -18,8 +21,7 @@ import org.testcontainers.junit.jupiter.Container;
 import java.time.Instant;
 import java.util.List;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -37,10 +39,16 @@ public class MessageControllerTest {
     @Autowired
     private MessageRepository messageRepository;
 
+    @MockitoBean
+    private MessageIngestionService messageIngestionService;
+
+    @MockitoBean
+    private MessageDataSeeder messageDataSeeder;
+
     @Container
     @ServiceConnection
     static PostgreSQLContainer<?> postgresContainer =
-            new PostgreSQLContainer<>("postgres:17-alpine");
+            new PostgreSQLContainer<>("pgvector/pgvector:pg16");
 
     @Test
     @DisplayName("getHappyMessage should return happy message and status 200")
@@ -103,7 +111,7 @@ public class MessageControllerTest {
 
     @Test
     @DisplayName("getMessage should return message and status 200")
-    public void getMessage_returnsMessageAndStatus200() throws Exception {
+    public void getMessage_whenMessageExists_returnsMessageAndStatus200() throws Exception {
 
         var expectedTitle = "Title 1";
         var expectedContent = "Content 1";
@@ -117,6 +125,17 @@ public class MessageControllerTest {
                 .andExpect(jsonPath("$.id").value(savedMessageId))
                 .andExpect(jsonPath("$.title").value(expectedTitle))
                 .andExpect(jsonPath("$.content").value(expectedContent));
+    }
+
+    @Test
+    @DisplayName("getMessage when message does not exist should return status 404")
+    public void getMessage_whenMessageDoesNotExist_returnsStatus404() throws Exception {
+
+        var nonExistentMessageId = 999L;
+
+        mockMvc.perform(get("/messages/{id}", nonExistentMessageId)
+                        .contentType("application/json"))
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -134,6 +153,89 @@ public class MessageControllerTest {
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.title").value(expectedTitle))
                 .andExpect(jsonPath("$.content").value(expectedContent));
+    }
+
+    @Test
+    @DisplayName("createMessage when request is invalid should return status 400")
+    public void createMessage_whenRequestIsInvalid_returnsStatus400() throws Exception {
+
+        var invalidMessageRequest = new CreateMessageRequest("", "");
+
+        mockMvc.perform(post("/messages")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(invalidMessageRequest)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("updateMessage should return updated message and status 200")
+    public void updateMessage_whenMessageExists_shouldReturnUpdatedMessageAndStatus200() throws Exception {
+
+        var persistedMessage = messageRepository.saveAndFlush(createMessage("Title 1", "Content 1"));
+        var persistedMessageId = persistedMessage.getId();
+
+        var updateMessageRequest = createMessage("Updated Title", "Updated Content");
+        var expectedTitle = "Updated Title";
+        var expectedContent = "Updated Content";
+
+        mockMvc.perform(put("/messages/{id}", persistedMessageId)
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(updateMessageRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(persistedMessageId))
+                .andExpect(jsonPath("$.title").value(expectedTitle))
+                .andExpect(jsonPath("$.content").value(expectedContent));
+    }
+
+    @Test
+    @DisplayName("updateMessage should return status 404 when message does not exist")
+    public void updateMessage_whenMessageDoesNotExist_returnsStatus404() throws Exception {
+
+        var nonExistentMessageId = 999L;
+
+        mockMvc.perform(put("/messages/{id}", nonExistentMessageId)
+                .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(
+                                createMessage("Updated Title", "Updated Content"))))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("updateMessage should return status 400 when request is invalid")
+    public void updateMessage_whenRequestIsInvalid_returnsStatus400() throws Exception {
+
+        var persistedMessage = messageRepository.saveAndFlush(createMessage("Title 1", "Content 1"));
+        var persistedMessageId = persistedMessage.getId();
+
+        var invalidUpdateRequest = new CreateMessageRequest("", "");
+
+        mockMvc.perform(put("/messages/{id}", persistedMessageId)
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(invalidUpdateRequest)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("deleteMessage should return status 204 when message exists")
+    public void deleteMessage_whenMessageExists_returnsStatus204() throws Exception {
+
+        var persistedMessage = messageRepository.saveAndFlush(createMessage("Title 1", "Content 1"));
+        var persistedMessageId = persistedMessage.getId();
+
+        mockMvc.perform(delete("/messages/{id}", persistedMessageId)
+                        .contentType("application/json"))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @DisplayName("deleteMessage should return status 404 when message does not exist")
+    public void deleteMessage_whenMessageDoesNotExist_returnsStatus404() throws Exception {
+
+        var nonExistentMessageId =  999L;
+
+        mockMvc.perform(delete("/messages/{id}", nonExistentMessageId)
+                        .contentType("application/json"))
+                .andExpect(status().isNotFound());
     }
 
     private Message createMessage(String title, String content) {

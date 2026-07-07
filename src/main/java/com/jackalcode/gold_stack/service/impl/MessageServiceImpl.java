@@ -8,6 +8,7 @@ import com.jackalcode.gold_stack.repository.MessageRepository;
 import com.jackalcode.gold_stack.service.MessageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -16,6 +17,7 @@ import java.util.List;
 public class MessageServiceImpl implements MessageService {
 
     private final MessageRepository messageRepository;
+    private final MessageIngestionService messageIngestionService;
 
     @Override
     public List<MessageResponse> getMessages() {
@@ -28,22 +30,54 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public MessageResponse getMessage(Long id) {
+    public MessageResponse getMessage(Long messageId) {
 
-        Message retrievedMessage = messageRepository.findById(id)
-                .orElseThrow(() -> new MessageNotFoundException(id));
+        Message retrievedMessage = getMessageEntity(messageId);
 
         return mapToMessageResponse(retrievedMessage);
     }
 
     @Override
+    @Transactional
     public MessageResponse createMessage(CreateMessageRequest messageRequest) {
 
         Message messageToPersist = mapToMessage(messageRequest);
 
         var persistedMessage = messageRepository.save(messageToPersist);
 
+        messageIngestionService.ingest(persistedMessage);
+
         return mapToMessageResponse(persistedMessage);
+    }
+
+    @Override
+    @Transactional
+    public MessageResponse updateMessage(Long messageId, CreateMessageRequest messageRequest) {
+
+        Message existingMessage = getMessageEntity(messageId);
+
+        existingMessage.setTitle(messageRequest.title());
+        existingMessage.setContent(messageRequest.content());
+
+        var updatedMessage = messageRepository.save(existingMessage);
+
+        messageIngestionService.reIngest(updatedMessage);
+
+        return mapToMessageResponse(updatedMessage);
+    }
+
+    @Override
+    @Transactional
+    public void deleteMessage(Long messageId) {
+
+        Message message = getMessageEntity(messageId);
+        messageRepository.delete(message);
+        messageIngestionService.delete(messageId);
+    }
+
+    private Message getMessageEntity(Long messageId) {
+        return messageRepository.findById(messageId)
+                .orElseThrow(() -> new MessageNotFoundException(messageId));
     }
 
     private Message mapToMessage(CreateMessageRequest messageRequest) {
